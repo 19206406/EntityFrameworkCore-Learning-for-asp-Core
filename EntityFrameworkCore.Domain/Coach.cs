@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace EntityFrameworkCore.Domain
 {
-    public class League: BaseDomainObject
+    public class Coach: BaseDomainObject
     {
         public string Name { get; set; }
-        public List<Team> Teams { get; set; } = []; 
+        public int? TeamId { get; set; }
+        public virtual Team Team { get; set; } // propiedad de navegacion
     }
 }
