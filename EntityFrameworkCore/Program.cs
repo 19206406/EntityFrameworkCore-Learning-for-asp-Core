@@ -37,6 +37,25 @@ namespace EntityFrameworkCore
             /* Perfom Delete */
             //await SimpleDelete();
             //await DeleteWithRelationship();
+
+            /* Tracking vs No-Tracking*/
+
+            await TrackingVsNoTracking(); 
+        }
+
+        private static async Task TrackingVsNoTracking()
+        {
+            var withTracking = await context.Teams.FirstOrDefaultAsync(x => x.Id == 2);
+            var withNoTracking = await context.Teams.AsNoTracking().FirstOrDefaultAsync(x => x.Id == 4);
+
+            withTracking.Name = "Inter Milan";
+            withNoTracking.Name = "Rivoli United";
+
+            var entriesBeforeSave = context.ChangeTracker.Entries();
+
+            await context.SaveChangesAsync();
+
+            var entriesAfterSave = context.ChangeTracker.Entries(); 
         }
 
         private static async Task SimpleDelete()
