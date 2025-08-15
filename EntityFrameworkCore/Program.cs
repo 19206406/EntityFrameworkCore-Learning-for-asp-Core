@@ -1,5 +1,6 @@
 ﻿using EntityFrameworkCore.Data;
 using EntityFrameworkCore.Domain;
+using EntityFrameworkCore.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Runtime.CompilerServices;
@@ -39,8 +40,98 @@ namespace EntityFrameworkCore
             //await DeleteWithRelationship();
 
             /* Tracking vs No-Tracking*/
+            //await TrackingVsNoTracking(); 
 
-            await TrackingVsNoTracking(); 
+            ///* Adding OneToMany Related Records*/
+            //await AddNewTeamsWithLeague();
+            //await AddNewTeamWithLeagueId();
+            //await AddNewLeagueWithTeams();
+
+            ///* Adding ManyToMany Records*/
+            //await AddNewMatches();
+
+            /* Adding OneToOne Records */
+            //await AddNewCoach();
+
+            /* Including Related Data - Fager Loading */
+            //await IncludeRelatedRecords();
+
+            /* Projections to other data types or ananymous types */
+            //await SelectOneProperty();
+            //await AnonymousProjection();
+            //await StronglyTypedProjection(); 
+
+            /* Filtering with Related Data */
+            //await FilteringWithRelatedData();
+        }
+
+        async static Task FilteringWithRelatedData()
+        {
+            var leagues = await context.Leagues.Where(x => x.Teams.Any(x => x.Name.Contains("Bay"))).ToListAsync();
+        }
+
+        async static Task SelectOneProperty()
+        {
+            // solo estamos seleccionando una propiedad de la entidad 
+            var teams = await context.Teams.Select(x => x.Name).ToListAsync(); 
+        }
+
+        async static Task AnonymousProjection()
+        {
+            var teams = await context.Teams.Include(x => x.Coach)
+                .Select(
+                    x => 
+                    new { 
+                        TeamName = x.Name,
+                        CoachName = x.Coach.Name
+                    }
+                ).ToListAsync(); 
+            
+            foreach (var team in teams)
+            {
+                Console.WriteLine($"Team: {team.TeamName} | Coach: {team.CoachName}");
+            }
+        }
+
+        async static Task StronglyTypedProjection()
+        {
+            var teams = await context.Teams.Include(x => x.Coach).Include(x => x.League)
+                .Select(
+                    x =>
+                    new TeamDetail {
+                        Name = x.Name,
+                        CoachName = x.Coach.Name, 
+                        LeagueName = x.League.Name
+                    }
+                ).ToListAsync();
+
+            foreach (var team in teams)
+            {
+                Console.WriteLine($"Team: {team.Name} | Coach: {team.CoachName} | League: {team.LeagueName}");
+            }
+        }
+
+        static async Task IncludeRelatedRecords()
+        {
+            // Get many related records Leagues -> Teams 
+            var leagues = await context.Leagues.Include(x => x.Teams).ToListAsync();
+
+            //Get one related record team > coah
+            var team = await context.Teams
+                .Include(x => x.Coach)
+                .FirstOrDefaultAsync(x => x.Id == 3);
+
+            // Get 'Grand Children' Related Record - Team --> Matches --> Home/Away Teams   
+            var teamsWithMatchesAndOpponents = await context.Teams
+                .Include(x => x.AwayMatches).ThenInclude(x => x.HomeTeam).ThenInclude(x => x.Coach)
+                .Include(x => x.HomeMatches).ThenInclude(x => x.AwayTeam).ThenInclude(x => x.Coach)
+                .FirstOrDefaultAsync(x => x.Id == 2);
+
+            // Get Includes with filters 
+            var teams = await context.Teams
+                .Where(x => x.HomeMatches == null)
+                .Include(x => x.Coach)
+                .ToListAsync(); 
         }
 
         private static async Task TrackingVsNoTracking()
@@ -183,6 +274,70 @@ namespace EntityFrameworkCore
             };
 
             await context.AddRangeAsync(teams); 
+        }
+
+        static async Task AddNewTeamsWithLeague()
+        {
+            var league = new League { Name = "Bundesliga" };
+            var team = new Team { Name = "Bayern Munich", League = league };
+            await context.AddAsync(team);
+            await context.SaveChangesAsync(); 
+        }
+
+        static async Task AddNewTeamWithLeagueId()
+        {
+            var team = new Team { Name = "Bayern Munich", LeagueId = 4 };
+            await context.AddAsync(team); 
+            await context.SaveChangesAsync();
+        }
+    
+        static async Task AddNewLeagueWithTeams()
+        {
+            var teams = new List<Team>
+            {
+                new Team
+                {
+                    Name = "Rivoli United"
+                },
+                new Team
+                {
+                    Name = "Waterhouse FC"
+                },
+            };
+
+            var league = new League { Name = "CIFA", Teams = teams };
+            await context.AddAsync(league);
+            await context.SaveChangesAsync(); 
+
+        }
+        
+        static async Task AddNewMatches()
+        {
+            var matches = new List<Match>
+            {
+                new Match
+                {
+                    AwayTeamId = 4, HomeTeamId = 2, Date = new DateTime(2023, 10, 1),
+                },
+                new Match
+                {
+                    AwayTeamId = 5, HomeTeamId = 6, Date = new DateTime(2023, 10, 2),
+                },
+            }; 
+
+            await context.AddRangeAsync(matches);
+            await context.SaveChangesAsync(); 
+        }
+    
+        static async Task AddNewCoach()
+        {
+            var coach1 = new Coach { Name = "Jose Mourinho", TeamId = 2 };
+            await context.AddAsync(coach1); 
+
+            var coach2 = new Coach { Name = "Antonio Conte" };
+            await context.AddAsync(coach2);
+
+            await context.SaveChangesAsync();
         }
     }
 }
