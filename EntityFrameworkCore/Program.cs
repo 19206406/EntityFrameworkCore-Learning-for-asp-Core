@@ -63,6 +63,53 @@ namespace EntityFrameworkCore
 
             /* Filtering with Related Data */
             //await FilteringWithRelatedData();
+
+            /* Querying views */
+            //await QueryView(); 
+
+            /* Querying views */
+            ////await RawSQLQuery(); 
+            ///
+
+            /* Query stored Procedures */
+            ////await ExecStoredProcedure(); 
+
+            /* RAW SQL Non-Query Commands */
+            //await ExecuteNonQueryCommand(); 
+        }
+
+        async static Task ExecuteNonQueryCommand()
+        {
+            var teamId = 2;
+            var affectedRows = await context.Database.ExecuteSqlRawAsync("exec sp_DeleteTeamById {0}", teamId);
+
+            var teamId2 = 5; 
+            var affectedRows2 = await context.Database.ExecuteSqlInterpolatedAsync($"exec sp_DeleteTeamById {teamId2}");
+        }
+
+        async static Task ExecStoredProcedure()
+        {
+            var teamId = 3;
+            var result = await context.Coaches.FromSqlRaw("EXEC dbo.sp_GetTeamCoach {0}", teamId).ToListAsync(); 
+        }
+
+        async static Task RawSQLQuery()
+        {
+            //var teams1 = await context.Teams.FromSqlRaw("SELECT * FROM Teams")
+            //    .Include(x => x.Coach).ToListAsync();
+
+            var name = "AS Roma"; 
+            var teams1 = await context.Teams.FromSqlRaw($"SELECT * FROM Teams WHERE name = '{name}'")
+                .Include(x => x.Coach).ToListAsync();
+
+            // Mas recomendable usar FromSqlInterpolated para evitar inyecciones SQL
+            var teams2 = await context.Teams.FromSqlInterpolated($"SELECT * FROM Teams WHERE name = '{name}'").ToListAsync(); 
+        }
+
+        // esto es un ejemplo de consultar una vista creada 
+        async static Task QueryView()
+        {
+            var details = await context.TeamsCoachesLeagues.ToListAsync(); 
         }
 
         async static Task FilteringWithRelatedData()

@@ -4,6 +4,7 @@ using EntityFrameworkCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EntityFrameworkCore.Data.Migrations
 {
     [DbContext(typeof(FootballLeagueDbContext))]
-    partial class FootballLeagueDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250816193433_AddingTeamDetailsWiewAndEarlyMatchFunction")]
+    partial class AddingTeamDetailsWiewAndEarlyMatchFunction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -106,22 +109,6 @@ namespace EntityFrameworkCore.Data.Migrations
                     b.HasIndex("LeagueId");
 
                     b.ToTable("Teams");
-                });
-
-            modelBuilder.Entity("EntityFrameworkCore.Domain.TeamsCoachesLeaguesView", b =>
-                {
-                    b.Property<string>("CoachName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LeagueName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("TeamsCoachesLeagues", (string)null);
                 });
 
             modelBuilder.Entity("EntityFrameworkCore.Domain.Coach", b =>
