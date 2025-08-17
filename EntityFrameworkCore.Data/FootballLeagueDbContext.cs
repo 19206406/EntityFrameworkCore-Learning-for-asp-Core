@@ -1,4 +1,6 @@
-﻿using EntityFrameworkCore.Domain;
+﻿using EntityFrameworkCore.Data.Configurations.Entities;
+using EntityFrameworkCore.Domain;
+using EntityFrameworkCore.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -36,7 +38,20 @@ namespace EntityFrameworkCore.Data
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<TeamsCoachesLeaguesView>().HasNoKey().ToView("TeamsCoachesLeagues"); 
+            modelBuilder.Entity<TeamsCoachesLeaguesView>().HasNoKey().ToView("TeamsCoachesLeagues");
+
+            modelBuilder.Entity<Team>().Property(p => p.Name).HasMaxLength(50);
+            modelBuilder.Entity<Team>().HasIndex(h => h.Name).IsUnique();
+
+            modelBuilder.Entity<League>().Property(p => p.Name).HasMaxLength(50);
+            modelBuilder.Entity<League>().HasIndex(h => h.Name);
+
+            modelBuilder.Entity<Coach>().Property(p => p.Name).HasMaxLength(50);
+            modelBuilder.Entity<Coach>().HasIndex(h => new { h.Name, h.TeamId}).IsUnique();
+
+            modelBuilder.ApplyConfiguration(new CoachSeedConfiguration());
+            modelBuilder.ApplyConfiguration(new TeamSeedConfiguration());
+            modelBuilder.ApplyConfiguration(new LeagueSeedConfiguration()); 
         }
 
         public DbSet<Team> Teams { get; set; }
